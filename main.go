@@ -45,6 +45,7 @@ func main() {
 
 	authRoute := r.Group("/auth")
 	authRoute.POST("/login", handler.Login().AuthLogin)
+	authRoute.POST("/logindb", handler.Login().AuthLogin)
 
 	transactionRoute := r.Group("/transaction")
 	transactionRoute.GET("/get", func(g *gin.Context) {
@@ -62,9 +63,11 @@ func main() {
 			"data": clientResponse,
 		})
 	})
-	transactionRoute.POST("/transferbank", handler.NewTransaction().Create)
+	transactionRoute.POST("/transfer", handler.NewTransaction().Create)
 	transactionRoute.GET("/list-bank", new(handler.ListBankImplement).ReceiveBank)
 	transactionRoute.GET("/list-account", new(handler.ListAccountImplement).ReceiveAccount)
 	transactionRoute.GET("/check-valid-account/:bankid/:accountid", new(handler.ValidAccountImplement).ValidAccount)
+	transactionRoute.POST("/transfer-bank", handler.NewTransaction().Create)
+	transactionRoute.GET("/transaction-history", new(handler.TransactionHistoryImplement).ReceiveTransaction)
 	r.Run()
 }
