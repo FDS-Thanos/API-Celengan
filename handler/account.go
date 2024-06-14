@@ -53,12 +53,6 @@ func (a *acccountImplement) GetAccount(g *gin.Context) {
 	})
 }
 
-// type BodyPayLoadAccount struct {
-// 	AccountID string
-// 	Name      string
-// 	Address   string
-// }
-
 func (a *acccountImplement) CreateAccount(g *gin.Context) {
 	BodyPayLoad := model.Account{}
 
