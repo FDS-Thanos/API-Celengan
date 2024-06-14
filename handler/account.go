@@ -1,13 +1,12 @@
 package handler
 
 import (
+	"api_gateway/model"
+	"api_gateway/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-// handler --> folder
-// acccount go --> file
 
 type AccountInterface interface {
 	GetAccount(*gin.Context)
@@ -19,69 +18,141 @@ type AccountInterface interface {
 
 type acccountImplement struct{}
 
-func BalanceAccount() AccountInterface {
+func NewAccount() AccountInterface {
 	return &acccountImplement{}
 }
 
 func (a *acccountImplement) GetAccount(g *gin.Context) {
 	queryParam := g.Request.URL.Query()
+
 	name := queryParam.Get("name")
 
-	g.JSON(http.StatusOK, gin.H{
-		"Username": "Get account successfully :)",
-		"Password": name,
-	})
-}
+	accounts := []model.Account{}
 
-func NewAccount() AccountInterface {
-	return &acccountImplement{}
-}
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
 
-type BodyPayLoadAccount struct {
-	AccountID string
-	Name      string
-	Address   string
-}
+	defer db.Close()
 
-func (a *acccountImplement) CreateAccount(g *gin.Context) {
-	bodyPayload := BodyPayLoadAccount{}
+	q := orm
+	if name != "" {
+		q = q.Where("name = ?", name)
+	}
 
-	err := g.BindJSON(&bodyPayload)
-	if err != nil {
-		g.AbortWithError(http.StatusBadRequest, err)
+	result := q.Find(&accounts)
+
+	if result.Error != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
 	}
 
 	g.JSON(http.StatusOK, gin.H{
-		"message": "Hello guys this rest api for later :)",
-		"data":    bodyPayload,
+		"message": "Get account successfully",
+		"data":    accounts,
 	})
 }
 
+// type BodyPayLoadAccount struct {
+// 	AccountID string
+// 	Name      string
+// 	Address   string
+// }
+
+func (a *acccountImplement) CreateAccount(g *gin.Context) {
+	BodyPayLoad := model.Account{}
+
+	err := g.BindJSON(&BodyPayLoad)
+	if err != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	result := orm.Create(&BodyPayLoad)
+	if result.Error != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
+		return
+	}
+
+	g.JSON(http.StatusOK, gin.H{
+		"message": "Create account successfully :)",
+		"data":    BodyPayLoad,
+	})
+
+}
+
 func (a *acccountImplement) UpdateAccount(g *gin.Context) {
-	queryParam := g.Request.URL.Query()
-	name := queryParam.Get("name")
+	BodyPayLoad := model.Account{}
+	err := g.BindJSON(&BodyPayLoad)
+	if err != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	id := g.Param("id")
+
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	user := model.Account{}
+	orm.First(&user, "account_id = ?", id)
+	user.Name = BodyPayLoad.Name
+	user.Username = BodyPayLoad.Username
+	orm.Save(&user)
+
+	if user.AccountID == "" {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Data not found :(",
+		})
+		return
+	}
 
 	g.JSON(http.StatusOK, gin.H{
 		"message": "Update account successfully :)",
-		"data":    map[string]string{"name": name},
+		"data":    user,
 	})
 }
 
 func (a *acccountImplement) DeleteAccount(g *gin.Context) {
 	id := g.Param("id")
 
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	result := orm.Where("account_id = ?", id).Delete(&model.Account{})
+	if result.Error != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
+		return
+	}
+
 	g.JSON(http.StatusOK, gin.H{
-		"message": "Delete account successfully",
-		"data":    map[string]string{"name": id},
+		"message": "Delete Account successfully",
+		"data":    id,
 	})
+
 }
 
 func (a *acccountImplement) BalanceAccount(g *gin.Context) {
 	queryParam := g.Request.URL.Query()
+
 	balance := queryParam.Get("balance")
 
 	g.JSON(http.StatusOK, gin.H{
-		"message": "Account balance successfully",
+		"message": "Get account successfully",
 		"data":    map[string]string{"name": balance},
 	})
+
 }

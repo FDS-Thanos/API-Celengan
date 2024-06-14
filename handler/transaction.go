@@ -1,38 +1,56 @@
 package handler
 
 import (
+	"api_gateway/model"
+	"api_gateway/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type transactionInterface interface {
-	CreateTransaction(*gin.Context)
+type TransactionInterface interface {
+	GetTransaction(*gin.Context)
+	Create(*gin.Context)
 }
-
 type transactionImplement struct{}
 
-func Transaction() transactionInterface {
+// GetTransaction implements TransactionInterface.
+func (pi *transactionImplement) GetTransaction(*gin.Context) {
+
+}
+
+func NewTransaction() TransactionInterface {
 	return &transactionImplement{}
 }
 
-type BodyPayLoadTransaction struct {
-	Amount      string
-	FromAccount string
-	ToAccount   string
-}
+func (pi *transactionImplement) Create(g *gin.Context) {
+	BodyPayLoad := model.Transaction{}
 
-func (a *transactionImplement) CreateTransaction(g *gin.Context) {
-	bodyPayload := BodyPayLoadTransaction{}
-
-	err := g.BindJSON(&bodyPayload)
+	err := g.BindJSON(&BodyPayLoad)
 	if err != nil {
-		g.AbortWithError(http.StatusBadRequest, err)
+		g.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	timeNow := time.Now()
+	BodyPayLoad.Transaction_date = &timeNow
+
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	result := orm.Create(&BodyPayLoad)
+	if result.Error != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
 		return
 	}
 
 	g.JSON(http.StatusOK, gin.H{
-		"message": "Hello guyss this rest api for laterr!!",
-		"data":    bodyPayload,
+		"message": "Create transaction successfully :D",
+		"data":    BodyPayLoad,
 	})
 }
