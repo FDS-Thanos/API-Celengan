@@ -3,6 +3,7 @@ package usecase
 import (
 	"api_gateway/model"
 	"api_gateway/utils"
+	"errors"
 	"log"
 
 	"gorm.io/gorm"
@@ -10,20 +11,20 @@ import (
 
 // type Login struct{}
 
-// type LoginInterface interface {
-// 	Auth(username, password string) bool
-// }
+type LoginInterface interface {
+	Auth(username, password string) bool
+}
 
-// func TaskLogin() LoginInterface {
-// 	return &Login{}
-// }
+func TaskLogin() LoginInterface {
+	return &Login{}
+}
 
-// func (pi *Login) Auth(username, password string) bool {
-// 	if username == "ivialva" && password == "123456" {
-// 		return true
-// 	}
-// 	return false
-// }
+func (pi *Login) Auth(username, password string) bool {
+	if username == "ivialva" && password == "123456" {
+		return true
+	}
+	return false
+}
 
 type Logindb struct{}
 
@@ -32,35 +33,37 @@ type LogindbInterface interface {
 }
 
 func NewLogin() LogindbInterface {
-	return &Logindb{}
+	return &Login{}
 }
 
-func (masuk *Logindb) Autentikasi(Username string, Password string) bool {
+func (masuk *Login) Autentikasi(Username string, Password string) bool {
 	bodyPayloadAuth := model.Account{}
 
 	orm := utils.NewDatabase().Orm
-	db, _ := orm.DB()
-
+	db, err := orm.DB()
+	if err != nil {
+		log.Printf("Error connecting to database: %v", err)
+		return false, errors.New("gagal menghubungi database")
+	}
 	defer db.Close()
+
 	// Mencari akun berdasarkan username
 	result := orm.Where("username = ?", Username).First(&bodyPayloadAuth)
 	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			// Tidak ditemukan
-			log.Printf("Username not found: %v", Username)
-			return false
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			log.Printf("Username tidak ditemukan: %v", Username)
+			return false, errors.New("username tidak ditemukan")
 		}
 		log.Printf("Error querying database: %v", result.Error)
-		return false
+		return false, errors.New("gagal melakukan query ke database")
 	}
 
 	// Verifikasi kata sandi
 	if bodyPayloadAuth.Password != Password {
-		// Kata sandi tidak cocok
-		log.Printf("Password does not match for username: %v", Username)
-		return false
+		log.Printf("Password tidak cocok untuk username: %v", Username)
+		return false, errors.New("password tidak cocok")
 	}
 
 	// Sukses
-	return true
+	return true, nil
 }
