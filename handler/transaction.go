@@ -3,7 +3,10 @@ package handler
 import (
 	"api_gateway/model"
 	"api_gateway/utils"
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -212,16 +215,73 @@ type TransferAmountInterface interface {
 
 type TransferAmountImplement struct{}
 
+type BodyPayloadCreateTrx struct {
+	BankID    string
+	AccountID string
+	Amount    float64
+}
+
 func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 
-	// Perform HTTP request to external service
-	data, err := fetchDataTransferAmount()
+	url := "http://localhost:5000/v1/api/transfer"
+
+	dataPayload := BodyPayloadCreateTrx{}
+
+	err := g.BindJSON(&dataPayload)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	g.JSON(http.StatusOK, data)
+	byDataPayload, err := json.Marshal(dataPayload)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(byDataPayload))
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	trx := model.Transaction{
+		Account_id: dataPayload.AccountID,
+		Amount:     int(dataPayload.Amount),
+	}
+
+	timeNow := time.Now()
+	trx.Transaction_date = &timeNow
+
+	defer db.Close()
+
+	result := orm.Create(&dataPayload)
+	if result.Error != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
+		return
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
+	g.JSON(http.StatusOK, gin.H{
+		"message": "transfer success",
+	})
 }
 
 type TransferAmount struct {
@@ -256,35 +316,6 @@ func fetchDataTransferAmount() (*TransferAmount, error) {
 	return &data, nil
 }
 
-// func (a *transferamountImplement) CreateAccount(g *gin.Context) {
-// 	BodyPayLoad := model.Account{}
-
-// 	err := g.BindJSON(&BodyPayLoad)
-// 	if err != nil {
-// 		g.AbortWithStatusJSON(http.StatusBadRequest, err)
-// 		return
-// 	}
-
-// 	orm := utils.NewDatabase().Orm
-// 	db, _ := orm.DB()
-
-// 	defer db.Close()
-
-// 	result := orm.Create(&BodyPayLoad)
-// 	if result.Error != nil {
-// 		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-// 			"error": result.Error,
-// 		})
-// 		return
-// 	}
-
-// 	g.JSON(http.StatusOK, gin.H{
-// 		"message": "Transfer Successfully",
-// 		"data":    BodyPayLoad,
-// 	})
-
-// }
-
 type TransactionHistoryInterface interface {
 	ReceiveTransaction(*gin.Context)
 }
@@ -292,44 +323,18 @@ type TransactionHistoryInterface interface {
 type TransactionHistoryImplement struct{}
 
 func (h *TransactionHistoryImplement) ReceiveTransaction(g *gin.Context) {
+	transaction := []model.Transaction{}
 
-	// Perform HTTP request to external service
-	data, err := fetchTransactionHistory()
-	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	orm := utils.NewDatabase().Orm
+	db, _ := orm.DB()
+
+	defer db.Close()
+
+	result := orm.Find(&transaction)
+	if result.Error != nil {
+		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": result.Error,
+		})
 		return
 	}
-
-	g.JSON(http.StatusOK, data)
-}
-
-type TransactionHistory struct {
-	Data []struct {
-		Name   string
-		BankID string
-	}
-}
-
-func fetchTransactionHistory() (*TransactionHistory, error) {
-	var client = &http.Client{}
-	var data TransactionHistory
-	var err error
-
-	request, err := http.NewRequest("GET", "http://localhost:5000/v1/api/transfer/", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	err = json.NewDecoder(response.Body).Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data, nil
 }

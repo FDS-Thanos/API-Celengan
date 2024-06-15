@@ -67,7 +67,7 @@ func main() {
 	transactionRoute.GET("/list-bank", new(handler.ListBankImplement).ReceiveBank)
 	transactionRoute.GET("/list-account", new(handler.ListAccountImplement).ReceiveAccount)
 	transactionRoute.GET("/check-valid-account/:bankid/:accountid", new(handler.ValidAccountImplement).ValidAccount)
-	transactionRoute.POST("/transfer-bank", handler.NewTransaction().Create)
+	transactionRoute.POST("/transfer-bank", new(handler.TransferAmountImplement).CreateTransaction)
 	transactionRoute.GET("/transaction-history", new(handler.TransactionHistoryImplement).ReceiveTransaction)
 	r.Run()
 }
