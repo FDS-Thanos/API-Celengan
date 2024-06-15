@@ -216,10 +216,9 @@ type TransferAmountInterface interface {
 type TransferAmountImplement struct{}
 
 type BodyPayloadCreateTrx struct {
-	AccountID             string
-	Amount                float64
-	Transaction_date      time.Time
-	Transaction_reference string
+	AccountID string
+	Amount    float64
+	BankID    string
 }
 
 func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
@@ -287,9 +286,9 @@ func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 
 type TransferAmount struct {
 	Data []struct {
+		Name      string
 		AccountID string
 		BankID    string
-		Amount    string
 	}
 }
 
@@ -321,7 +320,13 @@ type TransactionHistoryInterface interface {
 	ReceiveTransaction(*gin.Context)
 }
 
-type TransactionHistoryImplement struct{}
+type TransactionHistoryImplement struct {
+	ID                    int
+	AccountID             string
+	Transaction_amount    string
+	Transaction_date      string
+	Transaction_reference string
+}
 
 func (h *TransactionHistoryImplement) ReceiveTransaction(g *gin.Context) {
 	transaction := []model.Transaction{}
@@ -338,4 +343,5 @@ func (h *TransactionHistoryImplement) ReceiveTransaction(g *gin.Context) {
 		})
 		return
 	}
+	g.JSON(200, transaction)
 }
