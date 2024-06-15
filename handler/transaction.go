@@ -246,6 +246,7 @@ func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	// connect to database
 	orm := utils.NewDatabase().Orm
 	db, _ := orm.DB()
 
@@ -323,7 +324,7 @@ type TransactionHistoryInterface interface {
 type TransactionHistoryImplement struct {
 	ID                    int
 	AccountID             string
-	Transaction_amount    string
+	Transaction_amount    float64
 	Transaction_date      string
 	Transaction_reference string
 }
