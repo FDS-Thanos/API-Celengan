@@ -98,12 +98,12 @@ func (a *acccountImplement) UpdateAccount(g *gin.Context) {
 	defer db.Close()
 
 	user := model.Account{}
-	orm.First(&user, "account_id = ?", id)
+	orm.First(&user, "id = ?", id)
 	user.Name = BodyPayLoad.Name
 	user.Username = BodyPayLoad.Username
 	orm.Save(&user)
 
-	if user.AccountID == "" {
+	if user.ID == "" {
 		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Data not found :(",
 		})
@@ -124,7 +124,7 @@ func (a *acccountImplement) DeleteAccount(g *gin.Context) {
 
 	defer db.Close()
 
-	result := orm.Where("account_id = ?", id).Delete(&model.Account{})
+	result := orm.Where("id = ?", id).Delete(&model.Account{})
 	if result.Error != nil {
 		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": result.Error,

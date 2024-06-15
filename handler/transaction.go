@@ -216,9 +216,10 @@ type TransferAmountInterface interface {
 type TransferAmountImplement struct{}
 
 type BodyPayloadCreateTrx struct {
-	BankID    string
-	AccountID string
-	Amount    float64
+	AccountID             string
+	Amount                float64
+	Transaction_date      time.Time
+	Transaction_reference string
 }
 
 func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
