@@ -44,7 +44,7 @@ func main() {
 	accountRoute.GET("/balance", handler.NewAccount().BalanceAccount)
 
 	authRoute := r.Group("/auth")
-	authRoute.POST("/login", handler.Login().AuthLogin)
+	// authRoute.POST("/login", handler.Login().AuthLogin)
 	authRoute.POST("/logindb", handler.Login().AuthLogin)
 
 	transactionRoute := r.Group("/transaction")

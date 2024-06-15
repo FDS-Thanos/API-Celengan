@@ -16,7 +16,7 @@ type TransactionInterface interface {
 }
 type transactionImplement struct{}
 
-func (pi *transactionImplement) GetTransaction(*gin.Context) {
+func (t *transactionImplement) GetTransaction(*gin.Context) {
 
 }
 
@@ -24,7 +24,7 @@ func NewTransaction() TransactionInterface {
 	return &transactionImplement{}
 }
 
-func (pi *transactionImplement) Create(g *gin.Context) {
+func (t *transactionImplement) Create(g *gin.Context) {
 	BodyPayLoad := model.Transaction{}
 
 	err := g.BindJSON(&BodyPayLoad)
@@ -61,7 +61,7 @@ type ListBankInterface interface {
 
 type ListBankImplement struct{}
 
-func (i *ListBankImplement) ReceiveBank(g *gin.Context) {
+func (b *ListBankImplement) ReceiveBank(g *gin.Context) {
 
 	// Perform HTTP request to external service
 	data, err := fetchDataListBank()
@@ -207,12 +207,12 @@ func fetchDataCheckValidAccount(bankid string, accountid string) (*CheckValidAcc
 }
 
 type TransferAmountInterface interface {
-	SendAmount(*gin.Context)
+	CreateTransaction(*gin.Context)
 }
 
 type TransferAmountImplement struct{}
 
-func (i *TransferAmountImplement) SendAmount(g *gin.Context) {
+func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 
 	// Perform HTTP request to external service
 	data, err := fetchDataTransferAmount()
@@ -291,7 +291,7 @@ type TransactionHistoryInterface interface {
 
 type TransactionHistoryImplement struct{}
 
-func (i *TransactionHistoryImplement) ReceiveTransaction(g *gin.Context) {
+func (h *TransactionHistoryImplement) ReceiveTransaction(g *gin.Context) {
 
 	// Perform HTTP request to external service
 	data, err := fetchTransactionHistory()

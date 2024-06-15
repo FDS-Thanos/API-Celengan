@@ -8,22 +8,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type Login struct{}
+// type Login struct{}
 
-type LoginInterface interface {
-	Auth(username, password string) bool
-}
+// type LoginInterface interface {
+// 	Auth(username, password string) bool
+// }
 
-func TaskLogin() LoginInterface {
-	return &Login{}
-}
+// func TaskLogin() LoginInterface {
+// 	return &Login{}
+// }
 
-func (pi *Login) Auth(username, password string) bool {
-	if username == "ivialva" && password == "123456" {
-		return true
-	}
-	return false
-}
+// func (pi *Login) Auth(username, password string) bool {
+// 	if username == "ivialva" && password == "123456" {
+// 		return true
+// 	}
+// 	return false
+// }
 
 type Logindb struct{}
 
@@ -32,10 +32,10 @@ type LogindbInterface interface {
 }
 
 func NewLogin() LogindbInterface {
-	return &Login{}
+	return &Logindb{}
 }
 
-func (masuk *Login) Autentikasi(Username string, Password string) bool {
+func (masuk *Logindb) Autentikasi(Username string, Password string) bool {
 	bodyPayloadAuth := model.Account{}
 
 	orm := utils.NewDatabase().Orm
