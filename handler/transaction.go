@@ -251,8 +251,8 @@ func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 	db, _ := orm.DB()
 
 	trx := model.Transaction{
-		Account_id: dataPayload.AccountID,
-		Amount:     int(dataPayload.Amount),
+		Account_id:         dataPayload.AccountID,
+		Transaction_amount: int(dataPayload.Amount),
 	}
 
 	timeNow := time.Now()
