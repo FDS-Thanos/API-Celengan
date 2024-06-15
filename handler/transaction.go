@@ -37,7 +37,7 @@ func (t *transactionImplement) Create(g *gin.Context) {
 	}
 
 	timeNow := time.Now()
-	BodyPayLoad.Transaction_date = &timeNow
+	BodyPayLoad.TransactionDate = &timeNow
 
 	orm := utils.NewDatabase().Orm
 	db, _ := orm.DB()
@@ -251,16 +251,16 @@ func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 	db, _ := orm.DB()
 
 	trx := model.Transaction{
-		Account_id:         dataPayload.AccountID,
-		Transaction_amount: int(dataPayload.Amount),
+		AccountId:         dataPayload.AccountID,
+		TransactionAmount: int(dataPayload.Amount),
 	}
 
 	timeNow := time.Now()
-	trx.Transaction_date = &timeNow
+	trx.TransactionDate = &timeNow
 
 	defer db.Close()
 
-	result := orm.Create(&dataPayload)
+	result := orm.Create(&trx)
 	if result.Error != nil {
 		g.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": result.Error,
