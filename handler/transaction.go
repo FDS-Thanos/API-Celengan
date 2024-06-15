@@ -216,9 +216,10 @@ type TransferAmountInterface interface {
 type TransferAmountImplement struct{}
 
 type BodyPayloadCreateTrx struct {
-	AccountID string
-	Amount    float64
-	BankID    string
+	AccountID            string
+	Amount               float64
+	BankID               string
+	TransactionReference string
 }
 
 func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
@@ -251,8 +252,9 @@ func (tf *TransferAmountImplement) CreateTransaction(g *gin.Context) {
 	db, _ := orm.DB()
 
 	trx := model.Transaction{
-		AccountId:         dataPayload.AccountID,
-		TransactionAmount: int(dataPayload.Amount),
+		AccountId:            dataPayload.AccountID,
+		TransactionAmount:    int(dataPayload.Amount),
+		TransactionReference: dataPayload.TransactionReference,
 	}
 
 	timeNow := time.Now()
